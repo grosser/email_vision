@@ -1,0 +1,5 @@
+# you can get this info from the users edit screen
+# https://cce.campaigncommander.com/ccmd/jsp/login/indexCcmdLogin.jsp?lang=en
+:login: api_your_host
+:password: your_password
+:key: your_api_key
