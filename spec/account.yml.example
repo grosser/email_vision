@@ -1,5 +1,9 @@
-# you can get this info from the users edit screen
-# https://cce.campaigncommander.com/ccmd/jsp/login/indexCcmdLogin.jsp?lang=en
 :login: api_your_host
 :password: your_password
 :key: your_api_key
+:test_user: # this must be the complete data of a user currently in email vision
+  :gender: "0"
+  :email: test@test.de
+  :datejoin: 2009-12-07T13:36:15+01:00
+  :firstname: Test
+  :member_id: "1014086935042"

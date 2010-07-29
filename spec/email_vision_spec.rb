@@ -29,6 +29,4 @@ describe "EmailVision" do
     first = client.get_member_by_email(:email => 'test@test.de')
     first.should == client.get_member_by_email(:email => 'test@test.de')
   end
-
-  
 end
