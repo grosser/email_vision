@@ -7,7 +7,9 @@ Usage
 
     emv = EmailVision.new(:password => 'foo', :login => 'bar', :key => 'token')
     emv.find 'me@host.com'
-    emv.update 'me@host.com', :foo => 1, :bar => 2
+    emv.create :email => 'me@host.com', :foo => 1, :bar => 2
+    emv.update :find_by_email => 'old@host.com', :email => 'me@host.com', :foo => 1, :bar => 2
+    emv.create_or_update :email => 'me@host.com', :foo => 1, :bar => 2
 
     See [WSDL](http://emvapi.emv3.com/apimember/services/MemberService?wsdl) for details
 

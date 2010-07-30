@@ -31,12 +31,25 @@ class EmailVision
     end
   end
 
-  def update(email, attributes)
-    execute(:update_member, :email => email, :field => attributes.keys.first, :value => attributes.values.first)
+  def update(attributes)
+    execute_by_obj(:update_member_by_obj, attributes)
   end
 
-  def method_missing(method, options)
-    execute(method, options)
+  def create(attributes)
+    execute_by_obj(:insert_member_by_obj, attributes)
+  end
+
+  def create_or_update(attributes)
+    execute_by_obj(:insert_or_update_member_by_obj, attributes)
+  end
+
+  private
+
+  def execute_by_obj(method, attributes)
+    attributes = attributes.dup
+    find_by_email = attributes.delete(:find_by_email) || attributes.delete(:email)
+    entries = attributes.map{|k,v| {:entry => {:key => k, :value => v}}}
+    execute(method, :member => {:email => find_by_email, :dynContent => entries})
   end
 
   def execute(method, options)
@@ -44,13 +57,13 @@ class EmailVision
     response = connection.send(method){|r| r.body = options.merge(:token => @token) }
     returned = response.to_hash["#{method}_response".to_sym][:return]
     if returned.is_a?(Hash) and returned[:attributes]
-      convert_entries_to_hash(returned[:attributes][:entry])
+      convert_response_entries_to_hash(returned[:attributes][:entry])
     else
       returned
     end
   end
 
-  def convert_entries_to_hash(entries)
+  def convert_response_entries_to_hash(entries)
     entries.inject({}) do |hash, part|
       unless part[:value].nil?
         hash[part[:key].downcase.to_sym] = part[:value]
