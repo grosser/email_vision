@@ -5,10 +5,26 @@ require 'email_vision'
 describe "EmailVision" do
   let(:email){"#{rand(1111111)}.foo@justatest.com"}
   let(:random_value){rand(11111111111).to_s}
+  let(:expired_token){'Duy-M5FktALawBJ7dZN94s6hLEgLGKXC_j7cCqlDUMXRGw2shqHYbR9Zud_19EBtFkSCbJ0ZmrZ_d0ieBqgR'}
 
   # updates need some time to finish on the server...
-  def wait_for_updates
-    sleep 40
+  def wait_for_job_to_finish
+    job_id = yield
+    20.times do
+      sleep 5
+      puts status = client.job_status(job_id)
+      return if status == 'Job_Done_Or_Does_Not_Exist'
+    end
+    raise "Job not finished in time!"
+  end
+
+  def reset_email
+    email = client.find(changeable_user[:member_id])[:email]
+    wait_for_job_to_finish do
+      client.update_email(email, changeable_user[:email])
+    end
+    email = client.find(changeable_user[:member_id])[:email]
+    email.should == changeable_user[:email]
   end
 
   let(:config){YAML.load(File.read('spec/account.yml'))}
@@ -20,13 +36,15 @@ describe "EmailVision" do
   end
   let(:changeable_user){config[:changeable_user]}
 
-  it "can connect" do
-    client.connect
+  it "can call more than one method" do
+    first = client.find(findable_user[:email])
+    first.should == client.find(findable_user[:email])
   end
 
-  it "can call more than one method" do
-    first = client.find('test@test.de')
-    first.should == client.find('test@test.de')
+  it "can reconnect when token is expired" do
+    client.instance_variable_set('@token', expired_token)
+    client.instance_variable_set('@token_requested', Time.now.to_i - EmailVision::SESSION_TIMEOUT - 10)
+    client.find(findable_user[:email])[:email].should == findable_user[:email]
   end
 
   describe :find do
@@ -47,24 +65,14 @@ describe "EmailVision" do
 
   describe :update do
     it "can update a attribute" do
-      client.update(:email => changeable_user[:email], :firstname => random_value)
-      wait_for_updates
-      data = client.find(changeable_user[:email])
+      wait_for_job_to_finish do
+        client.update(:email => changeable_user[:email], :firstname => random_value)
+      end
+      puts data = client.find(changeable_user[:email])
       data[:firstname].should == random_value
 
       # it does not overwrite other attributes
       data[:lastname].should == changeable_user[:lastname]
-    end
-
-    it "can update the email" do
-      client.update(:email_was => changeable_user[:email], :email => email)
-      wait_for_updates
-      data = client.find(changeable_user[:member_id])
-      data[:email].should == email
-
-      # clean up
-      client.update(:find_by_email => email, :email => changeable_user[:email])
-      wait_for_updates
     end
 
     it "returns a job id" do
@@ -73,17 +81,32 @@ describe "EmailVision" do
     end
   end
 
+  describe :update_email do
+    after do
+      reset_email
+    end
+
+    it "updates the email" do
+      wait_for_job_to_finish do
+        client.update_email(changeable_user[:email], email)
+      end
+      client.find(email)[:email].should == email
+    end
+  end
+
   describe :create_or_update do
     it "can create a record" do
-      client.create_or_update(:email => email, :firstname => 'first-name')
-      wait_for_updates
+      wait_for_job_to_finish do
+        client.create_or_update(:email => email, :firstname => 'first-name')
+      end
       data = client.find(email)
       data[:firstname].should == 'first-name'
     end
 
     it "can update a record" do
-      client.create_or_update(:email => changeable_user[:email], :firstname => random_value)
-      wait_for_updates
+      wait_for_job_to_finish do
+        client.create_or_update(:email => changeable_user[:email], :firstname => random_value)
+      end
       data = client.find(changeable_user[:email])
       data[:firstname].should == random_value
     end
@@ -91,8 +114,9 @@ describe "EmailVision" do
 
   describe :create do
     it "can create a record" do
-      client.create(:email => email, :firstname => 'first-name')
-      wait_for_updates
+      wait_for_job_to_finish do
+        client.create(:email => email, :firstname => 'first-name')
+      end
       data = client.find(email)
       data[:firstname].should == 'first-name'
     end
@@ -107,8 +131,9 @@ describe "EmailVision" do
 
   describe :unjoin do
     it "can unjoin a member" do
-      client.unjoin(changeable_user[:email])
-      wait_for_updates
+      wait_for_job_to_finish do
+        client.unjoin(changeable_user[:email])
+      end
       date = client.find(changeable_user[:email])[:dateunjoin]
       date.is_a?(DateTime).should == true
       Time.parse(date.to_s).should be_close(Time.now, 40)
@@ -117,8 +142,9 @@ describe "EmailVision" do
 
   describe :rejoin do
     it "can rejoin a member" do
-      client.rejoin(changeable_user[:email])
-      wait_for_updates
+      wait_for_job_to_finish do
+        client.rejoin(changeable_user[:email])
+      end
       date = client.find(changeable_user[:email])[:datejoin]
       date.is_a?(DateTime).should == true
       Time.parse(date.to_s).should be_close(Time.now, 40)

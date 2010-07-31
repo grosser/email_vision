@@ -18,7 +18,7 @@ end
 desc 'possible actions'
 task :actions do
   unnecessary_actions = [:open_api_connection, :close_api_connection]
-  actions = email_vision.connection.wsdl.soap_actions
+  actions = email_vision.send(:connection).wsdl.soap_actions
   puts (actions - unnecessary_actions).map{|x|" - #{x}"}.sort.join("\n")
 end
 
@@ -35,4 +35,19 @@ task :test_update do
     break if data[:firstname] == value.to_s
   end
   puts "SUCCESS!!!!!! #{(Time.now - start).to_i}"
+end
+
+begin
+  require 'jeweler'
+  project_name = 'email_vision'
+  Jeweler::Tasks.new do |gem|
+    gem.name = project_name
+    gem.summary = "Ruby SOAP Api Client for EmailVision / CampaignCommander"
+    gem.email = "grosser.michael@gmail.com"
+    gem.homepage = "http://github.com/grosser/#{project_name}"
+    gem.authors = ["Michael Grosser"]
+    gem.add_dependency 'savon'
+  end
+rescue LoadError
+  puts "Jeweler, or one of its dependencies, is not available. Install it with: sudo gem install jeweler"
 end

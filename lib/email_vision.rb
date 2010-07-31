@@ -2,25 +2,11 @@ require 'savon'
 
 class EmailVision
   WSDL = "http://emvapi.emv3.com/apimember/services/MemberService?wsdl"
+  SESSION_TIMEOUT = 10*60
   attr_accessor :options
 
   def initialize(options)
     self.options = options
-  end
-
-  def connect
-    response = connection.open_api_connection{|r|
-      r.body = {
-        :login => options[:login],
-        :pwd => options[:password],
-        :key => options[:key]
-      }
-    }
-    @token = response.to_hash[:open_api_connection_response][:return]
-  end
-
-  def connection
-    @connection ||= Savon::Client.new WSDL
   end
 
   def find(email_or_id)
@@ -40,6 +26,10 @@ class EmailVision
 
   def update(attributes)
     execute_by_obj(:update_member_by_obj, attributes)
+  end
+
+  def update_email(old, new)
+    execute(:update_member, :email => old, :field => :email, :value => new)
   end
 
   def create(attributes)
@@ -64,6 +54,29 @@ class EmailVision
 
   private
 
+  def connection
+    unless connected?
+      response = client.open_api_connection{|r|
+        r.body = {
+          :login => options[:login],
+          :pwd => options[:password],
+          :key => options[:key]
+        }
+      }
+      @token = response.to_hash[:open_api_connection_response][:return]
+      @token_requested = Time.now.to_i
+    end
+    client
+  end
+
+  def client
+    @client ||= Savon::Client.new WSDL
+  end
+
+  def connected?
+    @token and @token_requested > (Time.now.to_i - SESSION_TIMEOUT)
+  end
+
   def execute_by_email_or_id(method, email_or_id)
     if email_or_id.to_s.include?('@')
       execute("#{method}_by_email", :email => email_or_id)
@@ -77,14 +90,11 @@ class EmailVision
   end
 
   def execute_by_obj(method, attributes)
-    attributes = attributes.dup
-    find_by_email = attributes.delete(:email_was) || attributes.delete(:email)
     entries = attributes.map{|k,v| {:entry => {:key => k, :value => v}}}
-    execute(method, :member => {:email => find_by_email, :dynContent => entries})
+    execute(method, :member => {:email => attributes[:email], :dynContent => entries})
   end
 
   def execute(method, options={})
-    connect unless @token
     response = connection.send(method){|r| r.body = options.merge(:token => @token) }
     response.to_hash["#{method}_response".to_sym][:return]
   end

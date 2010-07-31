@@ -10,14 +10,15 @@ Usage
     emv.create_or_update :email => 'me@host.com', :foo => 1
 
     emv.create :email => 'me@host.com', :foo => 1
-    emv.update :email_was => 'old@host.com', :email => 'me@host.com', :foo => 1
+    emv.update :email => 'me@host.com', :foo => 1
+    emv.change_email 'me@host.com', 'you@host.com'
 
     emv.columns
 
     emv.unjoin 'me@host.com'
     emv.rejoin 'me@host.com'
 
-    # create, create_or_update, update return a job-id
+    # create, create_or_update, update, change_email return a job-id
     emv.job_status job_id
 
 Author
