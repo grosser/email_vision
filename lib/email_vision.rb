@@ -50,6 +50,11 @@ class EmailVision
     execute_by_obj(:insert_or_update_member_by_obj, attributes)
   end
 
+  # should be one of: Insert, Processing, Processed, Error, Job_Done_Or_Does_Not_Exist
+  def job_status(job_id)
+    execute(:get_member_job_status, :synchro_id => job_id)[:status]
+  end
+
   def columns
     result = execute(:desc_member_table)
     result = convert_to_hash(result[:fields], :name, :type)

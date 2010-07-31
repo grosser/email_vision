@@ -66,6 +66,11 @@ describe "EmailVision" do
       client.update(:find_by_email => email, :email => changeable_user[:email])
       wait_for_updates
     end
+
+    it "returns a job id" do
+      job_id = client.update(:email => changeable_user[:email], :firstname => random_value)
+      client.job_status(job_id).should == 'Insert'
+    end
   end
 
   describe :create_or_update do
