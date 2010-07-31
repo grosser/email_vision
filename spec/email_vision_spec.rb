@@ -39,6 +39,10 @@ describe "EmailVision" do
       response = client.find(findable_user[:member_id])
       response.should == findable_user
     end
+
+    it "is nil when nothing was found" do
+      client.find('foo@bar.baz').should == nil
+    end
   end
 
   describe :update do
@@ -86,6 +90,13 @@ describe "EmailVision" do
       wait_for_updates
       data = client.find(email)
       data[:firstname].should == 'first-name'
+    end
+  end
+
+  describe :columns do
+    it "can read them" do
+      data = client.columns
+      data[:dateunjoin].should == :date
     end
   end
 end

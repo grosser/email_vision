@@ -24,11 +24,14 @@ class EmailVision
   end
 
   def find(name_or_id)
-    if name_or_id.to_s.include?('@')
+    result = if name_or_id.to_s.include?('@')
       execute(:get_member_by_email, :email => name_or_id)
     else
       execute(:get_member_by_id, :id => name_or_id)
     end
+    return unless result.is_a?(Hash)
+    result = convert_to_hash(result[:attributes][:entry], :key, :value)
+    result.reject{|k,v| v.nil? }
   end
 
   def update(attributes)
@@ -43,7 +46,18 @@ class EmailVision
     execute_by_obj(:insert_or_update_member_by_obj, attributes)
   end
 
+  def columns
+    result = execute(:desc_member_table)
+    result = convert_to_hash(result[:fields], :name, :type)
+    result.each{|k,v| result[k] = to_ruby_style(v)}
+    result
+  end
+
   private
+
+  def to_ruby_style(name)
+    name.downcase.to_sym
+  end
 
   def execute_by_obj(method, attributes)
     attributes = attributes.dup
@@ -52,22 +66,15 @@ class EmailVision
     execute(method, :member => {:email => find_by_email, :dynContent => entries})
   end
 
-  def execute(method, options)
+  def execute(method, options={})
     connect unless @token
     response = connection.send(method){|r| r.body = options.merge(:token => @token) }
-    returned = response.to_hash["#{method}_response".to_sym][:return]
-    if returned.is_a?(Hash) and returned[:attributes]
-      convert_response_entries_to_hash(returned[:attributes][:entry])
-    else
-      returned
-    end
+    response.to_hash["#{method}_response".to_sym][:return]
   end
 
-  def convert_response_entries_to_hash(entries)
+  def convert_to_hash(entries, key, value)
     entries.inject({}) do |hash, part|
-      unless part[:value].nil?
-        hash[part[:key].downcase.to_sym] = part[:value]
-      end
+      hash[to_ruby_style(part[key])] = part[value]
       hash
     end
   end
