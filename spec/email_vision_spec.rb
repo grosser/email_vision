@@ -57,7 +57,7 @@ describe "EmailVision" do
     end
 
     it "can update the email" do
-      client.update(:find_by_email => changeable_user[:email], :email => email)
+      client.update(:email_was => changeable_user[:email], :email => email)
       wait_for_updates
       data = client.find(changeable_user[:member_id])
       data[:email].should == email

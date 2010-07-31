@@ -61,7 +61,7 @@ class EmailVision
 
   def execute_by_obj(method, attributes)
     attributes = attributes.dup
-    find_by_email = attributes.delete(:find_by_email) || attributes.delete(:email)
+    find_by_email = attributes.delete(:email_was) || attributes.delete(:email)
     entries = attributes.map{|k,v| {:entry => {:key => k, :value => v}}}
     execute(method, :member => {:email => find_by_email, :dynContent => entries})
   end
