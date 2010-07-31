@@ -23,15 +23,19 @@ class EmailVision
     @connection ||= Savon::Client.new WSDL
   end
 
-  def find(name_or_id)
-    result = if name_or_id.to_s.include?('@')
-      execute(:get_member_by_email, :email => name_or_id)
-    else
-      execute(:get_member_by_id, :id => name_or_id)
-    end
+  def find(email_or_id)
+    result = execute_by_email_or_id(:get_member, email_or_id)
     return unless result.is_a?(Hash)
     result = convert_to_hash(result[:attributes][:entry], :key, :value)
     result.reject{|k,v| v.nil? }
+  end
+
+  def unjoin(email_or_id)
+    execute_by_email_or_id(:unjoin_member, email_or_id)
+  end
+
+  def rejoin(email_or_id)
+    execute_by_email_or_id(:rejoin_member, email_or_id)
   end
 
   def update(attributes)
@@ -54,6 +58,14 @@ class EmailVision
   end
 
   private
+
+  def execute_by_email_or_id(method, email_or_id)
+    if email_or_id.to_s.include?('@')
+      execute("#{method}_by_email", :email => email_or_id)
+    else
+      execute("#{method}_by_id", :id => email_or_id)
+    end
+  end
 
   def to_ruby_style(name)
     name.downcase.to_sym

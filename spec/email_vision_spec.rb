@@ -6,9 +6,9 @@ describe "EmailVision" do
   let(:email){"#{rand(1111111)}.foo@justatest.com"}
   let(:random_value){rand(11111111111).to_s}
 
-  # updates need ~ 30 seconds to finish on the server...
+  # updates need some time to finish on the server...
   def wait_for_updates
-    sleep 30
+    sleep 40
   end
 
   let(:config){YAML.load(File.read('spec/account.yml'))}
@@ -97,6 +97,26 @@ describe "EmailVision" do
     it "can read them" do
       data = client.columns
       data[:dateunjoin].should == :date
+    end
+  end
+
+  describe :unjoin do
+    it "can unjoin a member" do
+      client.unjoin(changeable_user[:email])
+      wait_for_updates
+      date = client.find(changeable_user[:email])[:dateunjoin]
+      date.is_a?(DateTime).should == true
+      Time.parse(date.to_s).should be_close(Time.now, 40)
+    end
+  end
+
+  describe :rejoin do
+    it "can rejoin a member" do
+      client.rejoin(changeable_user[:email])
+      wait_for_updates
+      date = client.find(changeable_user[:email])[:datejoin]
+      date.is_a?(DateTime).should == true
+      Time.parse(date.to_s).should be_close(Time.now, 40)
     end
   end
 end
