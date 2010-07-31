@@ -3,6 +3,7 @@ require 'savon'
 class EmailVision
   WSDL = "http://emvapi.emv3.com/apimember/services/MemberService?wsdl"
   SESSION_TIMEOUT = 10*60
+  VERSION = File.read( File.join(File.dirname(__FILE__),'..','VERSION') ).strip
   attr_accessor :options
 
   def initialize(options)

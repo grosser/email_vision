@@ -36,6 +36,10 @@ describe "EmailVision" do
   end
   let(:changeable_user){config[:changeable_user]}
 
+  it "has a VERSION" do
+    EmailVision::VERSION.should =~ /^\d+\.\d+\.\d+$/
+  end
+
   it "can call more than one method" do
     first = client.find(findable_user[:email])
     first.should == client.find(findable_user[:email])
