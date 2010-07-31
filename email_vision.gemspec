@@ -15,6 +15,8 @@ Gem::Specification.new do |s|
     ".gitignore",
      "Rakefile",
      "Readme.md",
+     "VERSION",
+     "email_vision.gemspec",
      "lib/email_vision.rb",
      "spec/account.yml.example",
      "spec/email_vision_spec.rb"
