@@ -21,7 +21,7 @@ describe "EmailVision" do
   def reset_email
     email = client.find(changeable_user[:member_id])[:email]
     wait_for_job_to_finish do
-      client.update_email(email, changeable_user[:email])
+      client.update(:email_was => email, :email => changeable_user[:email])
     end
     email = client.find(changeable_user[:member_id])[:email]
     email.should == changeable_user[:email]
@@ -83,18 +83,16 @@ describe "EmailVision" do
       job_id = client.update(:email => changeable_user[:email], :firstname => random_value)
       client.job_status(job_id).should == 'Insert'
     end
-  end
-
-  describe :update_email do
-    after do
-      reset_email
-    end
 
     it "updates the email" do
-      wait_for_job_to_finish do
-        client.update_email(changeable_user[:email], email)
+      begin
+        wait_for_job_to_finish do
+          client.update(:email_was => changeable_user[:email], :email => email)
+        end
+        client.find(email)[:email].should == email
+      ensure
+        reset_email
       end
-      client.find(email)[:email].should == email
     end
   end
 

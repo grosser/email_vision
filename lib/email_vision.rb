@@ -29,10 +29,6 @@ class EmailVision
     execute_by_obj(:update_member_by_obj, attributes)
   end
 
-  def update_email(old, new)
-    execute(:update_member, :email => old, :field => :email, :value => new)
-  end
-
   def create(attributes)
     execute_by_obj(:insert_member_by_obj, attributes)
   end
@@ -91,8 +87,9 @@ class EmailVision
   end
 
   def execute_by_obj(method, attributes)
+    existing_email = attributes.delete(:email_was) || attributes[:email]
     entries = attributes.map{|k,v| {:entry => {:key => k, :value => v}}}
-    execute(method, :member => {:email => attributes[:email], :dynContent => entries})
+    execute(method, :member => {:email => existing_email, :dynContent => entries})
   end
 
   def execute(method, options={})

@@ -11,7 +11,7 @@ Usage
 
     emv.create :email => 'me@host.com', :foo => 1
     emv.update :email => 'me@host.com', :foo => 1
-    emv.change_email 'me@host.com', 'you@host.com'
+    emv.update :email_was => 'me@host.com', :email => 'you@host.com'
 
     emv.columns
 
