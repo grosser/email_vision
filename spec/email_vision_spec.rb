@@ -72,11 +72,20 @@ describe "EmailVision" do
       wait_for_job_to_finish do
         client.update(:email => changeable_user[:email], :firstname => random_value)
       end
-      puts data = client.find(changeable_user[:email])
+      data = client.find(changeable_user[:email])
       data[:firstname].should == random_value
 
       # it does not overwrite other attributes
       data[:lastname].should == changeable_user[:lastname]
+    end
+
+    it "can update a Time" do
+      time = Time.now
+      wait_for_job_to_finish do
+        client.update(:email => changeable_user[:email], :dateofbirth => time.strftime('%Y-%m-%d %H:%M:%S'))
+      end
+      data = client.find(changeable_user[:email])
+      data[:dateofbirth].should == time
     end
 
     it "returns a job id" do
