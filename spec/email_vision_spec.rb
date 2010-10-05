@@ -31,7 +31,9 @@ describe "EmailVision" do
   let(:client){EmailVision.new(config)}
   let(:findable_user) do
     data = config[:findable_user]
-    data[:datejoin] = DateTime.parse(data[:datejoin].to_s)
+    [:datejoin, :dateunjoin].each do |field|
+      data[field] = DateTime.parse(data[field].to_s) if data[field]
+    end
     data
   end
   let(:changeable_user){config[:changeable_user]}
