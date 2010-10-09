@@ -9,13 +9,7 @@ describe "EmailVision" do
 
   # updates need some time to finish on the server...
   def wait_for_job_to_finish
-    job_id = yield
-    20.times do
-      sleep 5
-      puts status = client.job_status(job_id)
-      return if status == 'Job_Done_Or_Does_Not_Exist'
-    end
-    raise "Job not finished in time!"
+    client.wait_for_job_to_finish yield
   end
 
   def reset_email

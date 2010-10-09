@@ -5,6 +5,10 @@ class EmailVision
   SESSION_TIMEOUT = 10*60
   VERSION = File.read( File.join(File.dirname(__FILE__),'..','VERSION') ).strip
   attr_accessor :options
+  JOB_STATUS = {
+    :finished => 'Job_Done_Or_Does_Not_Exist',
+    :error => 'Error'
+  }
 
   def initialize(options)
     self.options = options
@@ -40,6 +44,20 @@ class EmailVision
   # should be one of: Insert, Processing, Processed, Error, Job_Done_Or_Does_Not_Exist
   def job_status(job_id)
     execute(:get_member_job_status, :synchro_id => job_id)[:status]
+  end
+
+  def wait_for_job_to_finish(job_id, options={})
+    interval = options[:interval] || 5
+    times = options[:times] || 20
+
+    times.times do
+      current_status = job_status(job_id)
+      raise "Job failed" if current_status == JOB_STATUS[:error]
+      return true if current_status == JOB_STATUS[:finished]
+      sleep interval
+    end
+
+    raise "Job not finished in time! #{current_status}"
   end
 
   def columns
