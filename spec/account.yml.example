@@ -1,9 +1,17 @@
 :login: api_your_host
 :password: your_password
 :key: your_api_key
-:test_user: # this must be the complete data of a user currently in email vision
+:findable_user:
+  :country: "DE"
   :gender: "0"
   :email: test@test.de
   :datejoin: 2009-12-07T13:36:15+01:00
+  :dateunjoin: 2010-09-17T11:03:01+02:00
   :firstname: Test
   :member_id: "1014086935042"
+:changeable_user: # must have firstname, lastname, country columns
+  :email: testaccount@testaccount.de
+  :member_id: "1021531859844"
+  :lastname: "account"
+  :country: "DE"
+  :member_id: "1021531859844"

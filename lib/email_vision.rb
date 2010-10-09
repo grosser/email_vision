@@ -88,7 +88,10 @@ class EmailVision
 
   def execute_by_obj(method, attributes)
     existing_email = attributes.delete(:email_was) || attributes[:email]
-    entries = attributes.map{|k,v| {:entry => {:key => k, :value => v}}}
+    entries = attributes.map do |k,v|
+      v = v.strftime('%Y-%m-%d %H:%M:%S') if v.is_a?(Time)
+      {:entry => {:key => k, :value => v}}
+    end
     execute(method, :member => {:email => existing_email, :dynContent => entries})
   end
 
