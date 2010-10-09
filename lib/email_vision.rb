@@ -108,11 +108,10 @@ class EmailVision
     existing_email = attributes.delete(:email_was) || attributes[:email]
     entries = attributes.map do |k,v|
       v = v.strftime('%Y-%m-%d %H:%M:%S') if v.is_a?(Time)
-      {:entry => {:key => k, :value => v}}
+      {:key => k, :value => v}
     end
-    entries = flatten_array_to_soap_xml(entries)
 
-    execute(method, :member => {:email => existing_email, :dynContent => entries})
+    execute(method, :member => {:email => existing_email, :dynContent => {:entry => entries}})
   end
 
   def execute(method, options={})
@@ -125,15 +124,5 @@ class EmailVision
       hash[to_ruby_style(part[key])] = part[value]
       hash
     end
-  end
-
-  def flatten_array_to_soap_xml(array)
-    return array unless array
-    array = array.map{|v| v.to_soap_xml }.join()
-    # hack the string so it does not get escaped
-    def array.to_soap_value
-      self
-    end
-    array
   end
 end
