@@ -71,13 +71,13 @@ class EmailVision
 
   def connection
     unless connected?
-      response = client.open_api_connection{|r|
+      response = client.request :open_api_connection do |r|
         r.body = {
           :login => options[:login],
           :pwd => options[:password],
           :key => options[:key]
         }
-      }
+      end
       @token = response.to_hash[:open_api_connection_response][:return]
       @token_requested = Time.now.to_i
     end
@@ -85,7 +85,9 @@ class EmailVision
   end
 
   def client
-    @client ||= Savon::Client.new WSDL
+    @client ||= Savon::Client.new do
+      wsdl.document = WSDL
+    end
   end
 
   def connected?
@@ -115,7 +117,7 @@ class EmailVision
   end
 
   def execute(method, options={})
-    response = connection.send(method){|r| r.body = options.merge(:token => @token) }
+    response = connection.request(method){|r| r.body = options.merge(:token => @token) }
     response.to_hash["#{method}_response".to_sym][:return]
   end
 

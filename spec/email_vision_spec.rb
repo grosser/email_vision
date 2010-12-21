@@ -149,7 +149,7 @@ describe "EmailVision" do
       end
       date = client.find(changeable_user[:email])[:dateunjoin]
       date.is_a?(DateTime).should == true
-      Time.parse(date.to_s).should be_close(Time.now, 40)
+      Time.parse(date.to_s).should be_within(40).of(Time.now)
     end
   end
 
@@ -160,7 +160,7 @@ describe "EmailVision" do
       end
       date = client.find(changeable_user[:email])[:datejoin]
       date.is_a?(DateTime).should == true
-      Time.parse(date.to_s).should be_close(Time.now, 40)
+      Time.parse(date.to_s).should be_within(40).of(Time.now)
     end
   end
 end
