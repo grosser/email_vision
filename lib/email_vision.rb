@@ -124,12 +124,16 @@ class EmailVision
     response.to_hash["#{method}_response".to_sym][:return]
   rescue Object => e
     if e.respond_to?(:http) and e.http.respond_to?(:body)
-      retries ||= 0
+      retries ||= -1
       retries += 1
       session_error = (e.http.body =~ /status>(SESSION_RETRIEVING_FAILED|CHECK_SESSION_FAILED)</)
-      if session_error and retries < 2
-        connect!
-        retry
+      if session_error
+        if retries < 1
+          connect!
+          retry
+        else
+          e.message << " -- retried #{retries}"
+        end
       end
     end
     raise e
