@@ -90,6 +90,15 @@ describe "EmailVision" do
       data[:dateofbirth].strftime('%s').to_i.should == time.to_i
     end
 
+    it "can update a Date" do
+      time = Date.new(2010, 5,1)
+      wait_for_job_to_finish do
+        client.update(:email => changeable_user[:email], :dateofbirth => time)
+      end
+      data = client.find(changeable_user[:email])
+      data[:dateofbirth].strftime('%s').to_i.should == 1272664800
+    end
+    
     it "returns a job id" do
       job_id = client.update(:email => changeable_user[:email], :firstname => random_value)
       client.job_status(job_id).should == 'Insert'
