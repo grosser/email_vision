@@ -7,6 +7,16 @@ describe "EmailVision" do
   let(:random_value){rand(11111111111).to_s}
   let(:expired_token){'Duy-M5FktALawBJ7dZN94s6hLEgLGKXC_j7cCqlDUMXRGw2shqHYbR9Zud_19EBtFkSCbJ0ZmrZ_d0ieBqgR'}
 
+  def error_with_status(status)
+    # mock / stub did not work...
+    $the_status = status
+    http = ""
+    def http.error?; true; end
+    def http.body; "<status>#{$the_status}</status>"; end
+    def http.code; 500; end
+    Savon::HTTP::Error.new(http)
+  end
+
   # updates need some time to finish on the server...
   def wait_for_job_to_finish
     client.wait_for_job_to_finish yield
@@ -60,6 +70,37 @@ describe "EmailVision" do
 
     it "is nil when nothing was found" do
       client.find('foo@bar.baz').should == nil
+    end
+  end
+
+  describe 'error handling' do
+    before do
+      @connection = client.send(:connection)
+      client.stub!(:connection).and_return @connection
+    end
+
+    it "retries if it failed due to session timeout" do
+      error = error_with_status("CHECK_SESSION_FAILED")
+      @connection.should_receive(:request).exactly(2).and_raise(error)
+      lambda{
+        client.find('aaaa')
+      }.should raise_error#(error)
+    end
+
+    it "retries if it failed due to maximum request per session" do
+      error = error_with_status("SESSION_RETRIEVING_FAILED")
+      @connection.should_receive(:request).exactly(2).and_raise(error)
+      lambda{
+        client.find('aaaa')
+      }.should raise_error#(error)
+    end
+
+    it "does not retry if it failed otherwise" do
+      error = error_with_status("FOO_BAR")
+      @connection.should_receive(:request).exactly(1).and_raise(error)
+      lambda{
+        client.find('aaaa')
+      }.should raise_error#(error)
     end
   end
 

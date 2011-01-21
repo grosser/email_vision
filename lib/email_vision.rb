@@ -70,17 +70,7 @@ class EmailVision
   private
 
   def connection
-    unless connected?
-      response = client.request :open_api_connection do |r|
-        r.body = {
-          :login => options[:login],
-          :pwd => options[:password],
-          :key => options[:key]
-        }
-      end
-      @token = response.to_hash[:open_api_connection_response][:return]
-      @token_requested = Time.now.to_i
-    end
+    connect! unless connected?
     client
   end
 
@@ -92,6 +82,18 @@ class EmailVision
 
   def connected?
     @token and @token_requested > (Time.now.to_i - SESSION_TIMEOUT)
+  end
+
+  def connect!
+    response = client.request :open_api_connection do |r|
+      r.body = {
+        :login => options[:login],
+        :pwd => options[:password],
+        :key => options[:key]
+      }
+    end
+    @token = response.to_hash[:open_api_connection_response][:return]
+    @token_requested = Time.now.to_i
   end
 
   def execute_by_email_or_id(method, email_or_id)
@@ -120,6 +122,17 @@ class EmailVision
   def execute(method, options={})
     response = connection.request(method){|r| r.body = options.merge(:token => @token) }
     response.to_hash["#{method}_response".to_sym][:return]
+  rescue Object => e
+    if e.respond_to?(:http) and e.http.respond_to?(:body)
+      retries ||= 0
+      retries += 1
+      session_error = (e.http.body =~ /status>(SESSION_RETRIEVING_FAILED|CHECK_SESSION_FAILED)</)
+      if session_error and retries < 2
+        connect!
+        retry
+      end
+    end
+    raise e
   end
 
   def convert_to_hash(entries, key, value)
