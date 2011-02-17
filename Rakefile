@@ -41,12 +41,11 @@ end
 
 begin
   require 'jeweler'
-  project_name = 'email_vision'
   Jeweler::Tasks.new do |gem|
-    gem.name = project_name
+    gem.name =  'email_vision'
     gem.summary = "Ruby SOAP Api Client for EmailVision / CampaignCommander"
     gem.email = "michael@grosser.it"
-    gem.homepage = "http://github.com/grosser/#{project_name}"
+    gem.homepage = "http://github.com/grosser/#{gem.name}"
     gem.authors = ["Michael Grosser"]
     gem.add_dependency 'savon'
   end
