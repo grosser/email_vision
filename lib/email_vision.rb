@@ -2,6 +2,7 @@ require 'savon'
 
 class EmailVision
   WSDL = "http://emvapi.emv3.com/apimember/services/MemberService?wsdl"
+  NAMESPACE = 'http://api.service.apimember.emailvision.com/'
   SESSION_TIMEOUT = 10*60
   VERSION = File.read( File.join(File.dirname(__FILE__),'..','VERSION') ).strip
   attr_accessor :options
@@ -85,8 +86,9 @@ class EmailVision
   end
 
   def connect!
-    response = client.request :open_api_connection do |r|
-      r.body = {
+    response = client.request(api(:open_api_connection)) do |request|
+      request.namespaces['xmlns:api'] = NAMESPACE
+      request.body = {
         :login => options[:login],
         :pwd => options[:password],
         :key => options[:key]
@@ -120,7 +122,10 @@ class EmailVision
   end
 
   def execute(method, options={})
-    response = connection.request(method){|r| r.body = options.merge(:token => @token) }
+    response = connection.request(api(method)) do |request|
+      request.namespaces['xmlns:api'] = NAMESPACE
+      request.body = options.merge(:token => @token)
+    end
     response.to_hash["#{method}_response".to_sym][:return]
   rescue Object => e
     if e.respond_to?(:http) and e.http.respond_to?(:body)
@@ -144,5 +149,9 @@ class EmailVision
       hash[to_ruby_style(part[key])] = part[value]
       hash
     end
+  end
+
+  def api(method)
+    "api:#{method.to_s.gsub(/_./){|x| x.sub('_','').upcase }}"
   end
 end
