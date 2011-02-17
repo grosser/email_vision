@@ -86,15 +86,12 @@ class EmailVision
   end
 
   def connect!
-    response = client.request(api(:open_api_connection)) do |request|
-      request.namespaces['xmlns:api'] = NAMESPACE
-      request.body = {
-        :login => options[:login],
-        :pwd => options[:password],
-        :key => options[:key]
-      }
-    end
-    @token = response.to_hash[:open_api_connection_response][:return]
+    @token = request_without_protection(:open_api_connection,
+      :login => options[:login],
+      :pwd => options[:password],
+      :key => options[:key],
+      :soap_client => client
+    )
     @token_requested = Time.now.to_i
   end
 
@@ -122,11 +119,7 @@ class EmailVision
   end
 
   def execute(method, options={})
-    response = connection.request(api(method)) do |request|
-      request.namespaces['xmlns:api'] = NAMESPACE
-      request.body = options.merge(:token => @token)
-    end
-    response.to_hash["#{method}_response".to_sym][:return]
+    request_without_protection(method, options.merge(:token => true))
   rescue Object => e
     if e.respond_to?(:http) and e.http.respond_to?(:body)
       retries ||= -1
@@ -144,6 +137,16 @@ class EmailVision
     raise e
   end
 
+  def request_without_protection(method, options)
+    client = options.delete(:soap_client) || connection
+    response = client.request(api_namespaced(method)) do |r|
+      r.namespaces['xmlns:api'] = NAMESPACE
+      options[:token] = @token if options[:token] # token first is generated via connection method
+      r.body = options
+    end
+    response.to_hash["#{method}_response".to_sym][:return]
+  end
+
   def convert_to_hash(entries, key, value)
     entries.inject({}) do |hash, part|
       hash[to_ruby_style(part[key])] = part[value]
@@ -151,7 +154,7 @@ class EmailVision
     end
   end
 
-  def api(method)
-    "api:#{method.to_s.gsub(/_./){|x| x.sub('_','').upcase }}"
+  def api_namespaced(method)
+    "api:#{method.to_s.gsub(/_./){|x| x.slice(1,1).upcase }}"
   end
 end
