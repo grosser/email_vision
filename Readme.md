@@ -19,7 +19,26 @@ Usage
     emv.rejoin 'me@host.com'
 
     # create, create_or_update, update, change_email return a job-id
-    emv.job_status job_id
+    # it can be used to wait for the job or fetch its status
+    job_id = emv.update :email => 'me@host.com', :foo => 1
+    puts "Status is #{emv.job_status job_id}"
+    emv.wait_for_job_to_finish job_id # raises when job failed
+
+
+    # :dateunjoin cannot be set via update, use a separate rejoin / unjoin request
+    class User < ActiveRecord::Base
+      after_save :update_email_vision
+
+      def update_email_vision
+        case receive_newsletter_change
+        when [false, true]
+          emv.rejoin(email)
+          emv.update(...data for emailv vision...)
+        when [true, false]
+          emv.unjoin(email)
+        end
+      end
+    end
 
 Docs
 ====
