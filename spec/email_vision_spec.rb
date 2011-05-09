@@ -139,6 +139,18 @@ describe "EmailVision" do
       data = client.find(changeable_user[:email])
       data[:dateofbirth].strftime('%s').to_i.should == 1272664800
     end
+
+    it "can remove dateunjoin" do
+      pending
+      wait_for_job_to_finish do
+        client.unjoin(changeable_user[:email])
+      end
+      wait_for_job_to_finish do
+        client.update(:email => changeable_user[:email], :dateunjoin => 'NULL')
+      end
+      data = client.find(changeable_user[:email])
+      data[:dateunjoin].should == nil
+    end
     
     it "returns a job id" do
       job_id = client.update(:email => changeable_user[:email], :firstname => random_value)
