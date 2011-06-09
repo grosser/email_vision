@@ -72,6 +72,12 @@ describe "EmailVision" do
       steady_fields(response).should == steady_fields(findable_user)
     end
 
+    it "can find first users of multiple that have the same email" do
+      client.should_receive(:execute_by_email_or_id).and_return [{:attributes=>{:entry=>[{:key=>"xx",:value=>'yyy'}]}},{:attributes=>{:entry=>[{:key=>"xx",:value=>'zzz'}]}}]
+      response = client.find('foo@bar.com')
+      steady_fields(response).should == {:xx => 'yyy'}
+    end
+
     it "is nil when nothing was found" do
       client.find('foo@bar.baz').should == nil
     end

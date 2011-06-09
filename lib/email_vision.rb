@@ -17,6 +17,7 @@ class EmailVision
 
   def find(email_or_id)
     result = execute_by_email_or_id(:get_member, email_or_id)
+    result = result.first if result.is_a?(Array) # may return multiple users if they have the same email -> return first
     return unless result.is_a?(Hash)
     result = convert_to_hash(result[:attributes][:entry], :key, :value)
     result.reject{|k,v| v.nil? }
