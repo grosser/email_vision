@@ -31,6 +31,10 @@ describe "EmailVision" do
     email.should == changeable_user[:email]
   end
 
+  def steady_fields(hash)
+    hash.reject{|k,v| [:datejoin, :dateunjoin, :custom26].include?(k) }
+  end
+
   let(:config){YAML.load(File.read('spec/account.yml'))}
   let(:client){EmailVision.new(config)}
   let(:findable_user) do
@@ -60,12 +64,12 @@ describe "EmailVision" do
   describe :find do
     it "can find by email" do
       response = client.find(findable_user[:email])
-      response.should == findable_user
+      steady_fields(response).should == steady_fields(findable_user)
     end
 
     it "can find by id" do
       response = client.find(findable_user[:member_id])
-      response.should == findable_user
+      steady_fields(response).should == steady_fields(findable_user)
     end
 
     it "is nil when nothing was found" do
